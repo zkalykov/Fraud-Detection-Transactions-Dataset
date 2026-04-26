@@ -1,39 +1,116 @@
-# Financial Fraud Detection with Random Forest 🕵️‍♂️💸
+# Fraud Detection on PaySim Synthetic Financial Dataset
 
-## Overview
-This repository contains a complete, end-to-end machine learning pipeline designed to detect fraudulent financial transactions. Utilizing the **PaySim synthetic dataset** (comprising over 6.3 million records), this project tackles the critical challenge of extreme class imbalance to accurately identify malicious activity without generating excessive false alarms.
+A machine learning project that detects fraudulent financial transactions using a Random Forest Classifier trained on the [PaySim](https://www.kaggle.com/datasets/ealaxi/paysim1) synthetic dataset (6.3M+ transactions).
 
-## The Challenge: Class Imbalance
-In the raw dataset, fraudulent transactions account for less than **0.14%** of the total volume. Standard machine learning models struggle with this environment, often achieving artificially high accuracy simply by blindly predicting the majority class ("Not Fraud") and missing the actual crimes.
+**Author:** Zhyrgalbek Kalykov  
+**Course:** COMP 2319 — North American University  
+**Professor:** Sabina Adhikari
 
-## Methodology & Preprocessing
-To build a robust predictive model, the following data engineering pipeline was implemented:
-
-* **One-Hot Encoding:** Categorical transaction types (e.g., `TRANSFER`, `CASH_OUT`) were numerically encoded to allow for independent mathematical comparison.
-* **Feature Scaling (StandardScaler):** Transaction amounts and account balances were scaled to Z-scores. This prevented columns with massive dollar ranges from biasing the model against smaller numerical features like the transaction `step` (time).
-* **Random Undersampling:** The extreme class imbalance was resolved by randomly sampling 8,213 legitimate transactions to perfectly match the 8,213 fraudulent transactions. This created a balanced, unbiased training subset of 16,426 rows.
-
-## Model Performance & Results
-A **Random Forest Classifier** (`n_estimators=100`) was trained on the balanced dataset and evaluated on an unseen 20% test split. The ensemble approach yielded exceptional results:
-
-* **Overall Accuracy:** 99%
-* **Fraud Recall:** 1.00 
-* **Precision:** 0.99
-
-> **Key Insight:** *Out of 1,664 actual fraud attempts in the final exam test set, the model successfully caught 1,660. Feature importance analysis revealed that the model relied most heavily on sender and receiver account balances (`oldbalanceOrg`, `newbalanceDest`) to flag suspicious behavior, rather than just the raw transaction amount.*
-
-## Tech Stack
-* **Language:** Python 3
-* **Libraries:** Pandas, Scikit-Learn, NumPy
-* **Visualization:** Matplotlib, Seaborn
-* **Environment:** Google Colab / Jupyter Notebook
-
-## How to Run
-1. Open the `.ipynb` notebook in Google Colab or your local Jupyter environment.
-2. The notebook includes a script using `kagglehub` to automatically fetch the PaySim dataset.
-3. Run the cells sequentially to observe the Exploratory Data Analysis (EDA), pipeline preprocessing, model training, and the final confusion matrix visual outputs.
+📄 **[Full Report (PDF)](PAYSIM_DATASET_TRAINING_REPORT.pdf)**
 
 ---
-**Author:** [Zhyrgalbek Kalykov](https://github.com/zkalykov)  
-**Institution:** North American University  
-**Course:** COMP 2319 - Introduction to Artificial Intelligence
+
+## Problem
+
+Fraudulent transactions make up less than 0.14% of the dataset. Standard classifiers trained on this raw distribution learn to predict "not fraud" for everything and achieve ~99.8% accuracy while catching zero actual fraud. The challenge is building a model that reliably detects the rare fraud cases without being overwhelmed by the class imbalance.
+
+## Dataset
+
+**Source:** [PaySim1 on Kaggle](https://www.kaggle.com/datasets/ealaxi/paysim1)
+
+| Property | Value |
+|----------|-------|
+| Total Transactions | 6,362,620 |
+| Fraudulent Transactions | 8,213 (0.13%) |
+| Transaction Types | CASH_IN, CASH_OUT, DEBIT, PAYMENT, TRANSFER |
+| Fraud-Prone Types | TRANSFER, CASH_OUT only |
+
+## Methodology
+
+The preprocessing pipeline was designed to avoid common pitfalls like data leakage and misleading evaluation metrics:
+
+1. **Feature Engineering** — Dropped `nameOrig`, `nameDest`, and `isFlaggedFraud`. One-Hot Encoded the `type` column with `drop_first=True` to avoid multicollinearity.
+
+2. **Stratified Train/Test Split** — Split the full dataset 80/20 using `stratify=y` to preserve the real-world 0.13% fraud rate in the test set.
+
+3. **Feature Scaling** — Fit `StandardScaler` on the training set only, then transformed both sets to prevent data leakage. (Note: Random Forests are scale-invariant, so this was applied for pipeline consistency and future model comparisons.)
+
+4. **Random Undersampling (Training Only)** — Downsampled normal transactions in the training set to match the fraud count, creating a balanced training subset. The test set was left untouched at its original imbalanced distribution.
+
+5. **Model Training** — Random Forest Classifier with 100 decision trees (`n_estimators=100`, `random_state=42`).
+
+## Results
+
+The model was evaluated on the **realistic imbalanced test set** (~1.27M transactions):
+
+| Metric | Value |
+|--------|-------|
+| Fraud Recall | 99.6% (1,637 / 1,643) |
+| Fraud Precision | 9.2% |
+| Missed Fraud Cases | 6 |
+| False Positives | 16,181 |
+
+### Confusion Matrix
+
+|  | Predicted: Not Fraud | Predicted: Fraud |
+|--|---------------------|-----------------|
+| **Actual: Not Fraud** | 1,254,700 | 16,181 |
+| **Actual: Fraud** | 6 | 1,637 |
+
+The 99.6% recall means only 6 fraud cases slipped through. The ~16K false positives represent the expected precision–recall tradeoff — in production, these would go to a human review queue rather than being auto-blocked.
+
+### Top Features
+
+The model relied most on account balance features:
+
+1. `oldbalanceOrg` (sender's starting balance)
+2. `amount` (transaction amount)
+3. `newbalanceOrig` (sender's ending balance)
+4. `type_TRANSFER`
+5. `type_CASH_OUT`
+
+## How to Run
+
+### Requirements
+
+```
+Python 3.8+
+pandas
+scikit-learn
+matplotlib
+seaborn
+kagglehub
+```
+
+### Steps
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/zkalykov/Fraud-Detection-Transactions-Dataset.git
+   cd Fraud-Detection-Transactions-Dataset
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install pandas scikit-learn matplotlib seaborn kagglehub
+   ```
+
+3. Open and run the notebook:
+   ```bash
+   jupyter notebook Synthetic_Financial_Datasets_For_Fraud_Detection.ipynb
+   ```
+
+   The notebook will automatically download the dataset from Kaggle via `kagglehub`.
+
+## Project Structure
+
+```
+├── README.md
+├── PAYSIM_DATASET_TRAINING_REPORT.pdf
+├── Synthetic_Financial_Datasets_For_Fraud_Detection.ipynb
+└── report.tex
+```
+
+## License
+
+This project was developed for academic purposes at North American University.
