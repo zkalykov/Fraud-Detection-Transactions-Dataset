@@ -6,7 +6,13 @@ A machine learning project that detects fraudulent financial transactions using 
 **Course:** COMP 2319 — North American University  
 **Professor:** Sabina Adhikari
 
-📄 **[Full Report (PDF)](PAYSIM_DATASET_TRAINING_REPORT.pdf)**
+---
+
+## 📄 Report
+
+[![Report Preview](report_preview.png)](https://github.com/zkalykov/Fraud-Detection-Transactions-Dataset/blob/main/PAYSIM_DATASET_TRAINING_REPORT.pdf)
+
+> *Click the image above to view the full report*
 
 ---
 
@@ -107,8 +113,9 @@ kagglehub
 ```
 ├── README.md
 ├── PAYSIM_DATASET_TRAINING_REPORT.pdf
+├── report_preview.png
+├── report.tex
 ├── Synthetic_Financial_Datasets_For_Fraud_Detection.ipynb
-└── report.tex
 ```
 
 ## License
